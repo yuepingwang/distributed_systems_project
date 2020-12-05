@@ -1,0 +1,10 @@
+<div class="phx-hero">
+  <h2>Hello World, from project in Phoenix!</h2>
+</div>
+
+<button type="button" id="myButton">+Cube</button>
+<script type="text/javascript">
+    document.getElementById("myButton").onclick = function () {
+        location.href = "http://localhost:4000/project/whatsup";
+    };
+</script>
