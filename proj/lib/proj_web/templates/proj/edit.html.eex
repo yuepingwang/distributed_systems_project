@@ -1,0 +1,4 @@
+<div class="phx-hero">
+  <h2>[EDIT SCREEN] Username: <%= @username %></h2>
+  <h3>[EDIT SCREEN] Edit: <%= @messenger %></h3>
+</div>
