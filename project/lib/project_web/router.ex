@@ -17,7 +17,11 @@ defmodule ProjectWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :test
-    get "/project", ProjectController, :test
+    
+    get "/project", PageController, :test
+    # get "/:username", ProjectController, :login
+
+    # get "/:username/:messenger", ProjectController, :edit
 
     get "/project/:messenger", ProjectController, :show
   end

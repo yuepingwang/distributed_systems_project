@@ -19,12 +19,18 @@ defmodule ProjectWeb.ProjectController do
     mymodels = %{:model_id => 1, :model_name => "untitled"}
 
     render(conn, "index.html")
-    # render("index.html")
   end
 
   def show(conn, %{"messenger" => messenger}) do
-
     render(conn, "show.html", messenger: messenger)
   end
+
+  # def login(conn, %{"username" => username}) do
+  #   render(conn, "login.html", username: username)
+  # end
+
+  # def edit(conn, %{"username" => username, "messenger" => messenger} = params) do
+  #   render(conn, "edit.html", params)
+  # end
 
 end
