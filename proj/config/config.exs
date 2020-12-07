@@ -7,6 +7,12 @@
 # General application configuration
 use Mix.Config
 
+config :proj, Modeldb.Repo,
+  database: "proj_repo",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost"
+
 config :proj,
   ecto_repos: [Proj.Repo]
 
