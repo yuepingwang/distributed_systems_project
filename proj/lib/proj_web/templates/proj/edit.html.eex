@@ -2,3 +2,7 @@
   <h2>[EDIT SCREEN] Username: <%= @username %></h2>
   <h3>[EDIT SCREEN] Edit: <%= @messenger %></h3>
 </div>
+
+<div>
+  <button type="button">Click Me!</button>
+</div>
