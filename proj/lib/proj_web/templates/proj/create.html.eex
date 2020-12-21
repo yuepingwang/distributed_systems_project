@@ -9,7 +9,7 @@
         <button class="custom-button" id="discardButton">Discard</button>
       </div>
       <div class="ui-panel-right-2">
-        <h4>Mode: Edit Selected Model</h4>
+        <h4>Mode: Create a New Model</h4>
         <div><h5>Resize x: </h5><input class="input-group-field" type="number" name="quantity" value="0"></div>
         <div><h5>Resize y: </h5><input class="input-group-field" type="number" name="quantity" value="0"></div>
         <div><h5>Resize z: </h5><input class="input-group-field" type="number" name="quantity" value="0"></div>
@@ -20,13 +20,13 @@
   <div>
     <script type="text/javascript">
       // turn the phx-elixir pattern-matched username into a js string
-      var username = ""+document.getElementById("username").innerHTML;
+      <%# var username = ""+document.getElementById("username").innerHTML;
       document.getElementById("saveButton").onclick = function () {
           location.href = "http://localhost:4000/"+username+"/hi";
       };
       document.getElementById("discardButton").onclick = function () {
           location.href = "http://localhost:4000/"+username;
-      };
+      }; %>
   </script>
   </div>
 
@@ -35,21 +35,24 @@
 
     import {DragControls} from "https://threejs.org/examples/jsm/controls/DragControls.js";
     import * as THREE from "https://threejs.org/build/three.module.js";
-      /* add javascript code */
-      let container;
-			let camera, scene, renderer;
-			let controls, group;
-			let enableSelection = false;
+        /* add javascript code */
+        let container;
+        let camera, scene, renderer;
+        let controls, group;
+        let enableSelection = false;
+        let useredit = "/";
+        const username = ""+document.getElementById("username").innerHTML;
 
-			var objects = [];
-      var basicMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 1, wireframe: true } );
+        var objects = [];
+
+        var basicMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 1, wireframe: true } );
 
 			const mouse = new THREE.Vector2(), raycaster = new THREE.Raycaster();
 
-          init();
+        init();
 
 
-          function init() {
+        function init() {
             container = document.createElement( 'div' );
             document.body.appendChild( container );
 
@@ -95,7 +98,8 @@
 
             var geometry = new THREE.BoxBufferGeometry( 50, 50, 50 );
 
-            for ( let i = 0; i < 10; i ++ ) {
+            // LOAD EXISTING MODEL FROM FS //
+            for ( let i = 0; i < 0; i ++ ) {
               var material = new THREE.MeshLambertMaterial({color: 0.09*(1.001-i) * 0x2010ff });
               material.needsUpdate = true;
               var object = new THREE.Mesh( geometry, material);
@@ -114,10 +118,9 @@
               object.receiveShadow = true;
               
               objects.push( object );
-              var jsonstring = JSON.stringify(object.toJSON());
-
-              var filename = "model_"+i+".txt";
             }
+            // END OF LOAD EXISTING MODEL FROM FS //
+            
 
             for ( let i = 0; i < objects.length; i ++ ){
               scene.add( objects[i]);
@@ -132,7 +135,8 @@
 
             container.appendChild( renderer.domElement );
             /* add drag controls */
-            controls = new DragControls( [ ... objects ], camera, renderer.domElement );
+            addNew();
+            <%# controls = new DragControls( [ ... objects ], camera, renderer.domElement );
             controls.addEventListener( 'drag', render );
 
             controls.addEventListener( 'dragstart', function ( event ) {
@@ -146,7 +150,7 @@
               event.object.material.opacity = 1;
               console.log("xpos:"+event.object.position.x+"; ypos:"+event.object.position.y+"; zpos:"+event.object.position.z);
               console.log("xscale:"+event.object.scale.x+"; yscale:"+event.object.scale.y+"; zscale:"+event.object.scale.z);
-              } );
+              } ); %>
             //
 
             window.addEventListener( 'resize', onWindowResize, false );
@@ -155,30 +159,60 @@
             window.addEventListener( 'keydown', onKeyDown, false );
             window.addEventListener( 'keyup', onKeyUp, false );
             render();
-          }
+        }
 
+        function addNew(){
+            var geometry = new THREE.BoxBufferGeometry( 500, 500, 500 );
+            var material = new THREE.MeshLambertMaterial({color: 0xa0a0f0 });
+            material.needsUpdate = true;
+            var object = new THREE.Mesh(geometry, material);
 
-          function onWindowResize() {
+            object.position.x = -400;
+            object.position.y = -290;
+            object.position.z = -100;
+
+            object.castShadow = true;
+            object.receiveShadow = true;
+            objects.push(object);
+            console.log("add");
+            scene.add(object);
+            //controls = new DragControls( [ ... objects ], camera, renderer.domElement );
+            controls = new DragControls( [object], camera, renderer.domElement );
+            controls.addEventListener( 'drag', render );
+
+            controls.addEventListener( 'dragstart', function ( event ) {
+            event.object.material.transparent = true;
+            event.object.material.opacity = 0.5;
+            event.object.material.emissive.set(0x707070);
+            } );
+
+            controls.addEventListener( 'dragend', function ( event ) {
+            event.object.material.transparent = false;
+            event.object.material.opacity = 1;
+            console.log("xpos:"+event.object.position.x+"; ypos:"+event.object.position.y+"; zpos:"+event.object.position.z);
+            console.log("xscale:"+event.object.scale.x+"; yscale:"+event.object.scale.y+"; zscale:"+event.object.scale.z);
+            } );
+        }
+
+        function onWindowResize() {
 
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize( window.innerWidth, window.innerHeight );
 
             render();
-          }
+        }
 
-          function onKeyDown( event ) {
+        function onKeyDown( event ) {
             enableSelection = ( event.keyCode === 16 ) ? true : false;
-          }
+        }
 
-          function onKeyUp() {
+        function onKeyUp() {
             enableSelection = false;
-          }
+        }
 
-          function onClick( event ) {
-
+        function onClick( event ) {
             event.preventDefault();
-
             if ( enableSelection === true ) {
               const draggableObjects = controls.getObjects();
               draggableObjects.length = 0;
@@ -211,20 +245,32 @@
               }
             }
             render();
-          }
+        }
 
           
-
-          function render() {
+        function render() {
             renderer.render( scene, camera );
-          }
+        }
 
-          function onDocumentMouseMove( event ) {
+        function onDocumentMouseMove( event ) {
             mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
             mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
             raycaster.setFromCamera( mouse.clone(), camera );   
             render();
-          }
+        }
+
+          
+        // ADD SAVE AND DISCARD EVENTS //
+        document.getElementById("saveButton").onclick = function () {
+            useredit += JSON.stringify(objects[objects.length-1].toJSON());
+            var uri = encodeURI(useredit);
+            console.log((uri));
+            location.href = "http://localhost:4000/"+username+useredit;
+        };
+        document.getElementById("discardButton").onclick = function () {
+            location.href = "http://localhost:4000/"+username;
+        };
+        // END OF SAVE AND DISCARD EVENTS //
       </script>
       
   </div>

@@ -34,12 +34,32 @@ defmodule ProjWeb.ProjController do
     IO.inspect allrecords
 
     ### Testing decoding URL strings to JSON
+    # string #
     url = URI.decode("%7B%22object%22%3A%20%7B%0A%09%09%22uuid%22%3A%20%2289529CC6-CBAC-412F-AFD1-FEEAE785BA19%22%2C%0A%09%09%22type%22%3A%20%22Scene%22%2C%0A%09%09%22matrix%22%3A%20%5B1%2C0%2C0%2C0%2C0%2C1%2C0%2C0%2C0%2C0%2C1%2C0%2C0%2C0%2C0%2C1%5D%2C%0A%09%09%22children%22%3A%20%5B%0A%09%09%09%7B%0A%09%09%09%09%22uuid%22%3A%20%2233FA38D9-0AAC-4657-9BBE-5E5780DDFB2F%22%2C%0A%09%09%09%09%22name%22%3A%20%22Box%201%22%2C%0A%09%09%09%09%22type%22%3A%20%22Mesh%22%2C%0A%09%09%09%09%22geometry%22%3A%20%22C3BF1E70-0BE7-4E6D-B184-C9F1E84A3423%22%2C%0A%09%09%09%09%22material%22%3A%20%2287D95D6C-6BB4-4B8F-8166-A3A6945BA5E3%22%2C%0A%09%09%09%09%22matrix%22%3A%20%5B1%2C0%2C0%2C0%2C0%2C1%2C0%2C0%2C0%2C0%2C1%2C0%2C0%2C0%2C0%2C1%5D%0A%09%09%09%7D%2C%0A%09%09%09%7B%0A%09%09%09%09%22uuid%22%3A%20%2216F2E381-2B73-44C4-A7BB-38D7E1CD2381%22%2C%0A%09%09%09%09%22name%22%3A%20%22PointLight%201%22%2C%0A%09%09%09%09%22type%22%3A%20%22PointLight%22%2C%0A%09%09%09%09%22color%22%3A%2016777215%2C%0A%09%09%09%09%22intensity%22%3A%201%2C%0A%09%09%09%09%22distance%22%3A%200%2C%0A%09%09%09%09%22matrix%22%3A%20%5B1%2C0%2C0%2C0%2C0%2C1%2C0%2C0%2C0%2C0%2C1%2C0%2C100%2C200%2C150%2C1%5D%0A%09%09%09%7D%0A%09%09%5D%0A%09%7D%7D")
     IO.inspect url
+    # json #
     myobject = JSON.decode(url)
     IO.inspect myobject
 
+    teststuff = Routes.static_path(conn, "/modelfs/test.txt")
+    IO.inspect teststuff
+
+    # check my path
+    # path = Application.app_dir(proj_web, "priv")
+    # myrelpath = relative_to_cwd("/proj/")
+    # IO.inspect path
+    # IO.write("test.txt", "test addtion")
+    # File.write!(teststuff, "test string")
+    # File.stream!("robots.txt", [], 100)
+    # File.touch!("my.txt",{{2020, 12, 18}, {13, 59, 59}})
+    # File.write!("my.txt","hello!")
+    File.touch!("./assets/static/modelfs/my1.txt",{{2020, 12, 18}, {13, 59, 59}})
+    File.write!("./assets/static/modelfs/my1.txt",Kernel.inspect(myobject))
     render(conn, "edit.html", username: username, messenger: messenger)
   end
   
+  def create(conn, %{"username" => username}) do
+    render(conn, "create.html", username: username)
+  end
+
 end

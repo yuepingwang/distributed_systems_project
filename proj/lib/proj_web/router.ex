@@ -18,6 +18,7 @@ defmodule ProjWeb.Router do
 
     get "/", PageController, :index
     get "/:username", ProjController, :login
+    get "/:username/new", ProjController, :create
     get "/:username/:messenger", ProjController, :edit
   end
 

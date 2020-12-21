@@ -1,21 +1,28 @@
 <div>
-<div class="ui-panel">
-  <div class="ui-panel-left">
-    <h1>MWMR 3D Editor</h1>
-    <h4>Logged in with username: <%= @username %></h4>
+  <div class="ui-panel">
+    <div class="ui-panel-left">
+      <h1>MWMR 3D Editor</h1>
+      <h4>Logged in as:</h4><h4 id="username"><%= @username %></h4>
+    </div>
+    <div class="ui-panel-right">
+      <button class="custom-button" id="createButton">+ Create New</button>
+      <button class="custom-button" id="modifyButton">Modify Model</button>
+      <%# <div><h5 style="font-style: italic;"><li>Previous modification saved.</li></h5></div> %>
+    </div>
   </div>
-  <div class="ui-panel-right">
-    <button class="custom-button">+ Create New</button>
-    <button class="custom-button">Modify Model</button>
-  </div>
-</div>
-
-<div class="scene">
-  <%# <script 
-    src="https://ajax.googleapis.com/ajax/libs/threejs/r84/three.min.js">
-  </script> %>
   
-  <script type="module">
+  <script type="text/javascript">
+    var username = ""+document.getElementById("username").innerHTML;
+    document.getElementById("modifyButton").onclick = function () {
+        location.href = "http://localhost:4000/"+username+"/edit_request";
+    };
+    document.getElementById("createButton").onclick = function () {
+        location.href = "http://localhost:4000/"+username+"/new";
+    };
+  </script>
+
+  <div class="scene">
+    <script type="module">
 
     import {DragControls} from "https://threejs.org/examples/jsm/controls/DragControls.js";
     import * as THREE from "https://threejs.org/build/three.module.js";
@@ -24,16 +31,16 @@
 			let camera, scene, renderer;
 			let controls, group;
 			let enableSelection = false;
+      let select_color = new THREE.Color(0x606060);
 
-			const objects = [];
+			var objects = [];
+      var basicMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 1, wireframe: true } );
 
 			const mouse = new THREE.Vector2(), raycaster = new THREE.Raycaster();
 
           init();
 
-
           function init() {
-           
             container = document.createElement( 'div' );
             document.body.appendChild( container );
 
@@ -45,8 +52,8 @@
 
             scene.add( new THREE.AmbientLight( 0x505050 ) );
 
-            const light = new THREE.SpotLight( 0xffffff, 1.5 );
-            light.position.set( 0, 500, 2000 );
+            const light = new THREE.SpotLight( 0xffffff, 1.2 );
+            light.position.set( 0, 1000, 1600 );
             light.angle = Math.PI / 9;
 
             light.castShadow = true;
@@ -59,29 +66,51 @@
 
             group = new THREE.Group();
             scene.add( group );
+            
+            //first add a base plane (z=0)
+            const base_geometry = new THREE.PlaneGeometry( 1000, 1000, 16,16);
+            const base_material = new THREE.MeshBasicMaterial( {color: 0xa9a2af, side: THREE.DoubleSide} );
+            const base_mesh_material = new THREE.LineBasicMaterial( { color: 0x60607f, linewidth: 10 } );
+            const base_plane = new THREE.Mesh( base_geometry, base_material);
+            const base_mesh = new THREE.LineSegments( base_geometry, base_mesh_material );
 
-            const geometry = new THREE.BoxBufferGeometry( 40, 40, 40 );
+            base_plane.rotation.x = Math.PI / 2;
+            base_plane.position.y = -270;
+            //base_plane.material.emissive.set( 0x606060 );
+            base_plane.receiveShadow = true;
+            scene.add( base_plane );
 
-            for ( let i = 0; i < 20; i ++ ) {
+            base_mesh.rotation.x = Math.PI / 2;
+            base_mesh.position.y = -270;
+            scene.add( base_mesh );
 
-              const object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+            var geometry = new THREE.BoxBufferGeometry( 50, 50, 50 );
+            
+            // LOAD EXISTING MODEL FROM FS //
+            for ( let i = 0; i < 10; i ++ ) {
+              var material = new THREE.MeshLambertMaterial({color: 0.09*(1.001-i) * 0x2010ff });
+              material.needsUpdate = true;
+              var object = new THREE.Mesh( geometry, material);
 
-              object.position.x = Math.random() * 1000 - 500;
-              object.position.y = Math.random() * 60 - 200;
-              object.position.z = Math.random() * 800 - 400;
+              object.position.x = 0.1*i * 900 - 400;
+              object.position.y = 1*(5-Math.abs(i-4.5)) * 60 - 290;
+              object.position.z = (1-0.08*i) * 400-100;
 
-              object.rotation.y = Math.random() * 2 * Math.PI;
+              object.rotation.y = 0.6*i * 2 * Math.PI;
 
-              object.scale.x = Math.random() * 2 + 1;
-              object.scale.y = Math.random() * 2 + 1;
-              object.scale.z = Math.random() * 2 + 1;
+              object.scale.x = 0.08*i * 2 + 1.2;
+              object.scale.y = (1-0.05*i) * 2 + 1.5;
+              object.scale.z = 0.05*i * 2 + 1;
 
               object.castShadow = true;
               object.receiveShadow = true;
-
-              scene.add( object );
-
+              
               objects.push( object );
+            }
+            // END OF LOAD EXISTING MODEL FROM FS //
+
+            for ( let i = 0; i < objects.length; i ++ ){
+              scene.add( objects[i]);
             }
 
             renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -92,21 +121,36 @@
             renderer.shadowMap.type = THREE.PCFShadowMap;
 
             container.appendChild( renderer.domElement );
-
+            
+            /* add drag controls */
             controls = new DragControls( [ ... objects ], camera, renderer.domElement );
             controls.addEventListener( 'drag', render );
 
-            //
+            controls.addEventListener( 'dragstart', function ( event ) {
+              event.object.material.transparent = true;
+              event.object.material.opacity = 0.5;
+            } );
+
+            controls.addEventListener( 'dragend', function ( event ) {
+              for (var i = 0; i<objects.length; i++) 
+                if (objects[i].material.emissive.r >0) 
+                  objects[i].material.emissive.set(0x000000);
+
+              event.object.material.transparent = false;
+              event.object.material.opacity = 1;
+              event.object.material.emissive.set(select_color);
+            } );
 
             window.addEventListener( 'resize', onWindowResize, false );
 
+            //document.getElementById("createButton").addEventListener( 'click', addNew, false );
             document.addEventListener( 'click', onClick, false );
             window.addEventListener( 'keydown', onKeyDown, false );
             window.addEventListener( 'keyup', onKeyUp, false );
             render();
           }
 
-          /* add drag controls */
+
           function onWindowResize() {
 
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -119,20 +163,16 @@
           }
 
           function onKeyDown( event ) {
-
             enableSelection = ( event.keyCode === 16 ) ? true : false;
-
           }
 
           function onKeyUp() {
-
             enableSelection = false;
-
           }
 
-          function onClick( event ) {
 
-            event.preventDefault();
+
+          function onClick( event ) {
 
             if ( enableSelection === true ) {
               const draggableObjects = controls.getObjects();
@@ -146,12 +186,13 @@
 
               if ( intersections.length > 0 ) {
                 const object = intersections[ 0 ].object;
-
+                object.material = basicMaterial;
                 if ( group.children.includes( object ) === true ) {
-                  object.material.emissive.set( 0x000000 );
+                  object.material = basicMaterial;
                   scene.attach( object );
                 } else {
-                  object.material.emissive.set( 0xaaaaaa );
+                  object.material.color.setHex(0xffffff);
+                  object.material = basicMaterial;
                   group.attach( object );
                 }
 
@@ -167,16 +208,21 @@
             render();
           }
 
+          
+
           function render() {
             renderer.render( scene, camera );
           }
 
           function onDocumentMouseMove( event ) {
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    raycaster.setFromCamera( mouse.clone(), camera );   
-    render();
+            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            raycaster.setFromCamera( mouse.clone(), camera );   
+            render();
           }
       </script>
+  
+    <%# <img src="<%= Routes.static_path(@conn, "/images/phoenix.png") %>"> %>
+    
   </div>
 </div>
